@@ -1,0 +1,20 @@
+stocks:
+  - code: US.OKLO
+    name: Oklo
+  - code: US.SMR
+    name: NuScale
+
+server:
+  host: 127.0.0.1
+  port: 8080
+
+futu:
+  host: 127.0.0.1
+  port: 11111
+
+thresholds:
+  main: 50000
+  fat:  10000
+  mid:  2000
+
+db_path: data/flow.db

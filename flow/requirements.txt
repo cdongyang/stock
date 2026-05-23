@@ -1,0 +1,7 @@
+futu-api
+fastapi
+uvicorn[standard]
+aiosqlite
+pyyaml
+pytest
+pytest-asyncio

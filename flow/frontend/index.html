@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <title>资金流向监控</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #0d1117; color: #c9d1d9; padding: 16px; }
+    #controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    select, input[type=date] { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 10px; border-radius: 6px; }
+    .tab { padding: 6px 14px; border-radius: 6px; border: 1px solid #30363d; background: #161b22; color: #8b949e; cursor: pointer; }
+    .tab.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+    #tier-chart  { width: 100%; height: 300px; }
+    #kline-chart { width: 100%; height: 200px; margin-top: 8px; }
+    #cum-chart   { width: 100%; height: 160px; margin-top: 8px; }
+    #tick-section { margin-top: 16px; }
+    #tick-filters { display: flex; gap: 6px; margin-bottom: 8px; }
+    .dir-btn { padding: 4px 12px; border-radius: 4px; border: 1px solid #30363d; background: #161b22; color: #8b949e; cursor: pointer; font-size: 13px; }
+    .dir-btn.active { background: #388bfd22; color: #58a6ff; border-color: #388bfd; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #161b22; color: #8b949e; padding: 6px 10px; text-align: left; border-bottom: 1px solid #21262d; }
+    td { padding: 5px 10px; border-bottom: 1px solid #21262d; }
+    tfoot td { padding: 6px 10px; background: #161b22; font-weight: 600; border-top: 1px solid #30363d; }
+    .buy  { color: #3fb950; font-weight: 600; }
+    .sell { color: #f85149; font-weight: 600; }
+    #status { margin-top: 8px; font-size: 12px; color: #8b949e; }
+  </style>
+</head>
+<body>
+<div id="controls">
+  <select id="stockSelect"></select>
+  <input type="date" id="dateSelect">
+  <div style="display:flex;gap:4px">
+    <button class="tab active" data-src="plan_b">方案B（逐笔）</button>
+    <button class="tab" data-src="plan_a">方案A（轮询）</button>
+  </div>
+</div>
+<div id="tier-chart"></div>
+<div id="kline-chart"></div>
+<div id="cum-chart"></div>
+
+<div id="tick-section">
+  <div id="tick-filters">
+    <button class="dir-btn active" data-dir="all">全部</button>
+    <button class="dir-btn" data-dir="buy">买入</button>
+    <button class="dir-btn" data-dir="sell">卖出</button>
+  </div>
+  <table>
+    <thead><tr><th>时间</th><th>价格</th><th>数量</th><th>金额</th><th>方向</th></tr></thead>
+    <tbody id="tick-body"></tbody>
+    <tfoot>
+      <tr>
+        <td>合计</td>
+        <td></td>
+        <td id="sum-volume">—</td>
+        <td id="sum-amount">—</td>
+        <td id="sum-net">—</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<div id="status">等待数据...</div>
+
+<script>
+const tierChart  = echarts.init(document.getElementById('tier-chart'));
+const klineChart = echarts.init(document.getElementById('kline-chart'));
+const cumChart   = echarts.init(document.getElementById('cum-chart'));
+function linkAxes(...charts) {
+  let busy = false;
+  charts.forEach(src => {
+    src.on('updateAxisPointer', evt => {
+      if (busy) return;
+      const info = evt.axesInfo?.[0];
+      if (info == null || info.value == null) return;
+      const xPx = src.convertToPixel({ xAxisIndex: 0 }, info.value);
+      if (xPx == null) return;
+      busy = true;
+      charts.forEach(dst => {
+        if (dst === src) return;
+        try { dst.dispatchAction({ type: 'showTip', x: xPx, y: dst.getHeight() / 2 }); }
+        catch (_) {}
+      });
+      busy = false;
+    });
+    src.getZr().on('mouseout', () => {
+      charts.forEach(dst => dst.dispatchAction({ type: 'hideTip' }));
+    });
+  });
+}
+linkAxes(tierChart, klineChart, cumChart);
+
+function linkDataZoom(...charts) {
+  let busy = false;
+  charts.forEach(src => {
+    src.on('datazoom', evt => {
+      if (busy) return;
+      const item = evt.batch?.[0] ?? evt;
+      if (item.start == null || item.end == null) return;
+      busy = true;
+      charts.forEach(dst => {
+        if (dst === src) return;
+        dst.dispatchAction({ type: 'dataZoom', start: item.start, end: item.end });
+      });
+      busy = false;
+    });
+  });
+}
+linkDataZoom(tierChart, klineChart, cumChart);
+
+let currentCode = '', currentSource = 'plan_b', currentDir = 'all';
+const MAX_TICKS = 200;
+let _visibleTicks = [];
+
+const SERIES = [
+  { name: '特大单净买入', field: 'main_net',  color: '#00c853' },
+  { name: '大单净买入',   field: 'fat_net',   color: '#69f0ae' },
+  { name: '中单净买入',   field: 'mid_net',   color: '#b9f6ca' },
+  { name: '小单净买入',   field: 'small_net', color: '#e8f5e9' },
+];
+
+const _axisCommon = {
+  type: 'category', data: [],
+  axisLabel: { color: '#8b949e', rotate: 30 },
+};
+
+tierChart.setOption({
+  backgroundColor: '#0d1117',
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' },
+    formatter: params => {
+      if (!params?.length) return '';
+      let s = `<b>${params[0]?.axisValue}</b><br>`;
+      params.forEach(p => {
+        if (p && p.value != null) s += `${p.seriesName}: $${(p.value/1000).toFixed(1)}k<br>`;
+      });
+      return s;
+    }
+  },
+  legend: { top: 4, textStyle: { color: '#8b949e' }, data: SERIES.map(s => s.name) },
+  grid: { left: 70, right: 12, top: 52, bottom: 30 },
+  xAxis: _axisCommon,
+  yAxis: { type: 'value', name: 'USD', nameTextStyle: { color: '#8b949e' },
+           axisLabel: { color: '#8b949e', formatter: v => '$'+(v/1000).toFixed(0)+'k' },
+           splitLine: { lineStyle: { color: '#21262d' } } },
+  dataZoom: [{ type: 'inside' }],
+  series: SERIES.map(s => ({
+    name: s.name, type: 'line', smooth: true, symbol: 'none',
+    lineStyle: { color: s.color, width: 1.5 },
+    itemStyle: { color: s.color }, data: []
+  }))
+});
+
+klineChart.setOption({
+  backgroundColor: '#0d1117',
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' },
+    formatter: params => {
+      if (!params?.length) return '';
+      const p = params[0];
+      if (!p || !Array.isArray(p.value)) return '';
+      const [o, c, l, h] = p.value;
+      return `<b>${p.axisValue}</b><br>O$${o.toFixed(2)} H$${h.toFixed(2)} L$${l.toFixed(2)} C$${c.toFixed(2)}`;
+    }
+  },
+  legend: { top: 4, textStyle: { color: '#8b949e' }, data: ['K线'] },
+  grid: { left: 70, right: 60, top: 36, bottom: 30 },
+  dataZoom: [{ type: 'inside' }],
+  xAxis: _axisCommon,
+  yAxis: [
+    { type: 'value', name: '价格', nameTextStyle: { color: '#8b949e' },
+      axisLabel: { color: '#8b949e', formatter: v => '$'+v.toFixed(2) },
+      splitLine: { lineStyle: { color: '#21262d' } }, scale: true },
+    { type: 'value', name: '涨跌%', position: 'right', nameTextStyle: { color: '#8b949e' },
+      axisLabel: { color: '#8b949e', formatter: v => v.toFixed(1)+'%' },
+      splitLine: { show: false } },
+  ],
+  series: [{
+    name: 'K线', type: 'candlestick', data: [],
+    itemStyle: {
+      color: '#f85149', color0: '#3fb950',
+      borderColor: '#f85149', borderColor0: '#3fb950',
+    },
+  }]
+});
+
+cumChart.setOption({
+  backgroundColor: '#0d1117',
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' },
+    formatter: p => {
+      if (!p?.length) return '';
+      return `${p[0]?.axisValue}  累计净流入: $${((p[0]?.value||0)/1000).toFixed(1)}k`;
+    }
+  },
+  grid: { left: 70, right: 12, top: 8, bottom: 60 },
+  dataZoom: [
+    { type: 'inside' },
+    { type: 'slider', height: 20, bottom: 8,
+      fillerColor: 'rgba(31,111,235,0.15)', borderColor: '#30363d',
+      handleStyle: { color: '#58a6ff' }, textStyle: { color: '#8b949e' } },
+  ],
+  xAxis: _axisCommon,
+  yAxis: { type: 'value', name: '累计(USD)', nameTextStyle: { color: '#8b949e' },
+           axisLabel: { color: '#8b949e', formatter: v => '$'+(v/1000).toFixed(0)+'k' },
+           splitLine: { lineStyle: { color: '#21262d' } } },
+  series: [{ name: '累计净流入', type: 'line', smooth: true, symbol: 'none',
+    lineStyle: { color: '#ff7c00', width: 2 },
+    areaStyle: { color: 'rgba(255,124,0,0.08)' }, data: [] }]
+});
+
+function setStatus(msg) { document.getElementById('status').textContent = msg; }
+
+function fmt(n) { return '$'+(n/1000).toFixed(1)+'k'; }
+
+function renderFlow(rows, klines = []) {
+  // 以 flow 时间和 K 线时间的并集为统一 x 轴，延伸盘 K 线正常显示
+  const flowMap = {};
+  rows.forEach(r => { flowMap[r.minute.slice(11, 16)] = r; });
+  const klineMap = {};
+  klines.forEach(k => { klineMap[k.time.slice(11, 16)] = k; });
+  const times = [...new Set([...Object.keys(flowMap), ...Object.keys(klineMap)])].sort();
+
+  tierChart.setOption({
+    xAxis: { data: times },
+    series: SERIES.map(s => ({
+      name: s.name,
+      data: times.map(t => flowMap[t]?.[s.field] ?? null),
+    }))
+  });
+
+  const klineData = times.map(t => {
+    const k = klineMap[t];
+    return k ? [k.open, k.close, k.low, k.high] : '-';
+  });
+  const realBars = klineData.filter(Array.isArray);
+  const refPrice = realBars.length ? realBars[0][0] : null;
+  const klineOpt = {
+    xAxis: { data: times },
+    series: [{
+      name: 'K线', type: 'candlestick', data: klineData,
+      itemStyle: {
+        color: '#f85149', color0: '#3fb950',
+        borderColor: '#f85149', borderColor0: '#3fb950',
+      },
+    }],
+  };
+  if (refPrice && realBars.length) {
+    const allPrices = realBars.flatMap(([o, c, l, h]) => [o, c, l, h]);
+    const lo = Math.min(...allPrices), hi = Math.max(...allPrices);
+    const pad = (hi - lo) * 0.1 || hi * 0.01;
+    klineOpt.yAxis = [
+      { min: lo - pad, max: hi + pad },
+      { min: lo - pad, max: hi + pad,
+        axisLabel: { color: '#8b949e',
+          formatter: v => `${((v - refPrice) / refPrice * 100).toFixed(1)}%` } },
+    ];
+  }
+  klineChart.setOption(klineOpt);
+
+  cumChart.setOption({
+    xAxis: { data: times },
+    series: [{ name: '累计净流入', data: times.map(t => flowMap[t]?.cum_net_flow ?? null) }]
+  });
+}
+
+function updateSummary() {
+  const totalVol = _visibleTicks.reduce((s, t) => s + t.volume, 0);
+  const totalAmt = _visibleTicks.reduce((s, t) => s + t.amount, 0);
+  const netAmt   = _visibleTicks.reduce((s, t) => s + (t.direction === 'buy' ? t.amount : -t.amount), 0);
+  document.getElementById('sum-volume').textContent = totalVol.toLocaleString();
+  document.getElementById('sum-amount').textContent = fmt(totalAmt);
+  const netEl = document.getElementById('sum-net');
+  netEl.textContent = (netAmt >= 0 ? '+' : '') + fmt(netAmt);
+  netEl.className = netAmt >= 0 ? 'buy' : 'sell';
+}
+
+function renderTicks(ticks) {
+  _visibleTicks = ticks.slice(0, MAX_TICKS);
+  const tbody = document.getElementById('tick-body');
+  tbody.innerHTML = '';
+  _visibleTicks.forEach(t => tbody.appendChild(makeRow(t)));
+  updateSummary();
+}
+
+function makeRow(t) {
+  const tr = document.createElement('tr');
+  const dir = t.direction === 'buy' ? '买入' : '卖出';
+  const cls = t.direction === 'buy' ? 'buy' : 'sell';
+  tr.innerHTML = `
+    <td>${t.time.slice(11)}</td>
+    <td>${t.price.toFixed(2)}</td>
+    <td>${t.volume.toLocaleString()}</td>
+    <td>${fmt(t.amount)}</td>
+    <td class="${cls}">${dir}</td>
+  `;
+  return tr;
+}
+
+function prependTick(t) {
+  if (t.code !== currentCode || currentSource !== 'plan_b') return;
+  if (currentDir !== 'all' && t.direction !== currentDir) return;
+  _visibleTicks.unshift(t);
+  if (_visibleTicks.length > MAX_TICKS) _visibleTicks.pop();
+  const tbody = document.getElementById('tick-body');
+  tbody.insertBefore(makeRow(t), tbody.firstChild);
+  while (tbody.children.length > MAX_TICKS) tbody.removeChild(tbody.lastChild);
+  updateSummary();
+}
+
+async function loadFlow() {
+  const date = document.getElementById('dateSelect').value || null;
+  const dp = date ? `&date=${date}` : '';
+  const kp = date ? `?date=${date}` : '';
+  const [rows, klines] = await Promise.all([
+    fetch(`/api/flow/${currentCode}?source=${currentSource}${dp}`).then(r => r.json()).catch(() => []),
+    fetch(`/api/kline/${currentCode}${kp}`).then(r => r.json()).catch(() => []),
+  ]);
+  renderFlow(rows, klines);
+  setStatus(`已加载 ${currentCode} (${currentSource === 'plan_a' ? '方案A' : '方案B'})`);
+}
+
+async function loadTicks() {
+  if (currentSource !== 'plan_b') return;
+  const date = document.getElementById('dateSelect').value || null;
+  const dp = date ? `&date=${date}` : '';
+  const ticks = await fetch(`/api/ticks/${currentCode}?direction=${currentDir}${dp}`)
+    .then(r => r.json()).catch(() => []);
+  renderTicks(ticks);
+}
+
+function setTickSectionVisible(visible) {
+  document.getElementById('tick-section').style.display = visible ? '' : 'none';
+}
+
+function connectWS() {
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => setStatus('WebSocket 已连接');
+  ws.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'flow_update' && msg.code === currentCode && currentSource === 'plan_b') {
+      loadFlow();
+    } else if (msg.type === 'tick') {
+      prependTick(msg.data);
+    }
+  };
+  ws.onclose = () => { setStatus('WebSocket 断开，3s 后重连...'); setTimeout(connectWS, 3000); };
+}
+
+async function loadStocks() {
+  const sel = document.getElementById('stockSelect');
+  const list = await fetch('/api/stocks').then(r => r.json())
+    .catch(() => [{ code: 'US.OKLO', name: 'Oklo' }]);
+  list.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.code; o.textContent = `${s.name} (${s.code})`;
+    sel.appendChild(o);
+  });
+  currentCode = sel.value;
+}
+
+document.getElementById('stockSelect').addEventListener('change', e => {
+  currentCode = e.target.value;
+  loadFlow(); loadTicks();
+});
+document.getElementById('dateSelect').addEventListener('change', () => {
+  loadFlow(); loadTicks();
+});
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSource = btn.dataset.src;
+    setTickSectionVisible(currentSource === 'plan_b');
+    loadFlow(); loadTicks();
+  });
+});
+document.querySelectorAll('.dir-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentDir = btn.dataset.dir;
+    loadTicks();
+  });
+});
+
+setInterval(() => { if (currentSource === 'plan_a') loadFlow(); }, 30000);
+
+async function initDate() {
+  const dateInput = document.getElementById('dateSelect');
+  if (dateInput.value) return;
+  const res = await fetch(`/api/latest_date/${currentCode}?source=${currentSource}`)
+    .then(r => r.json()).catch(() => ({}));
+  if (res.date) dateInput.value = res.date;
+}
+
+loadStocks().then(async () => { await initDate(); loadFlow(); loadTicks(); connectWS(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+export PATH="/Users/dy.chen/.local/bin:$PATH"
+export PROJECT_DIR="/Users/dy.chen/Personal/stock"
+export PWD="$PROJECT_DIR"
+export LOG_DIR="$PROJECT_DIR/logs"
+#export NO_PROXY="localhost,127.0.0.1,https://open.feishu.cn"

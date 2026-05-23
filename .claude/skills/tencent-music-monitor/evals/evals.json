@@ -1,0 +1,89 @@
+{
+  "skill_name": "tencent-music-monitor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我监控腾讯音乐最近有什么新事件，分析一下对公司的影响",
+      "expected_output": "Creates tencent-music/ directory structure with analyzed_events.json, index.md, and at least one event file in events/. Each event file should follow the bilingual template with summary, direct impact, strategic implications, investor angle, and risk/opportunity sections.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "directory_structure_created",
+          "description": "tencent-music/ directory exists with index.md, analyzed_events.json, and events/ subdirectory"
+        },
+        {
+          "name": "at_least_one_event_file",
+          "description": "At least one .md file exists inside tencent-music/events/"
+        },
+        {
+          "name": "event_file_bilingual_headers",
+          "description": "Event files contain all 5 bilingual section headers: 事件摘要/Summary, 直接影响/Direct Impact, 战略意义/Strategic Implications, 投资者视角/Investor Angle, 风险与机遇/Risk & Opportunity"
+        },
+        {
+          "name": "analyzed_events_json_valid",
+          "description": "analyzed_events.json is valid JSON with an 'events' array containing at least one entry with url, title, date, file, and impact_rating fields"
+        },
+        {
+          "name": "index_md_has_table_row",
+          "description": "index.md contains at least one data row in the event table (not just the header)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Search for recent TME news and analyze the business impact. Store results as usual.",
+      "expected_output": "Performs web searches for Tencent Music using multiple queries, deduplicates against existing registry, writes structured impact analysis files with correct bilingual format, updates index.md table, and reports summary to user.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "directory_structure_created",
+          "description": "tencent-music/ directory exists with index.md, analyzed_events.json, and events/ subdirectory"
+        },
+        {
+          "name": "at_least_one_event_file",
+          "description": "At least one .md file exists inside tencent-music/events/"
+        },
+        {
+          "name": "event_file_bilingual_headers",
+          "description": "Event files contain all 5 bilingual section headers: 事件摘要/Summary, 直接影响/Direct Impact, 战略意义/Strategic Implications, 投资者视角/Investor Angle, 风险与机遇/Risk & Opportunity"
+        },
+        {
+          "name": "tme_nyse_mentioned_in_investor_angle",
+          "description": "At least one event file's Investor Angle section explicitly mentions 'NYSE:TME' or 'NYSE' or 'TME股价' to signal stock-specific analysis"
+        },
+        {
+          "name": "impact_rating_emoji_present",
+          "description": "Event files include an impact rating using one of the defined emojis: 🔴, 🟡, 🟢, or ⚪"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "腾讯音乐今年的订阅用户增长情况怎么样？帮我找找最新财报或者相关新闻，按照标准格式分析保存",
+      "expected_output": "Focuses searches on subscription growth and earnings data for TME. Produces event analysis files covering financial/subscription metrics with correct investor angle section mentioning NYSE:TME.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "directory_structure_created",
+          "description": "tencent-music/ directory exists with index.md, analyzed_events.json, and events/ subdirectory"
+        },
+        {
+          "name": "at_least_one_event_file",
+          "description": "At least one .md file exists inside tencent-music/events/"
+        },
+        {
+          "name": "event_file_bilingual_headers",
+          "description": "Event files contain all 5 bilingual section headers: 事件摘要/Summary, 直接影响/Direct Impact, 战略意义/Strategic Implications, 投资者视角/Investor Angle, 风险与机遇/Risk & Opportunity"
+        },
+        {
+          "name": "subscription_topic_covered",
+          "description": "At least one event file discusses subscription or paid membership topics — contains '付费' or 'subscription' or '会员' in its content"
+        },
+        {
+          "name": "financial_data_included",
+          "description": "At least one event file covers earnings or financial results — contains '财报' or 'earnings' or 'revenue' or 'Q' (as in Q1/Q2/Q3/Q4) in its content"
+        }
+      ]
+    }
+  ]
+}
