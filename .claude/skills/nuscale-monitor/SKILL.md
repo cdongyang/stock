@@ -8,7 +8,7 @@ description: >
 
 This skill searches for recent events related to NuScale Power Corporation (NYSE: SMR), analyzes the impact of each event on the company, stores results in structured markdown files, and deduplicates to avoid re-analyzing events already on record.
 
-NuScale Power is a small modular reactor (SMR) company and the first to receive NRC design approval for its VOYGR SMR technology. The full knowledge base for NuScale is in @NuScale-power.md — use it as the primary reference for all impact assessments.
+NuScale Power is a small modular reactor (SMR) company and the first to receive NRC design approval for its VOYGR SMR technology. The full knowledge base for NuScale is in `research/stock/NuScale-Power.md` — use it as the primary reference for all impact assessments.
 
 ---
 
@@ -192,7 +192,7 @@ python3 scripts/feishu_notify.py \
   --item "发现 X 个新事件，跳过 Y 个重复" \
   --item "🟢 [事件标题1]" \
   --item "🔴 [事件标题2]" \
-  --footer "📁 详情: ~/stock-analysis/events/nuscale/"
+  --footer "📁 详情: events/nuscale/"
 ```
 
 - If no new events: `--item "✅ 今日无新事件（已跳过 Y 个重复）"`
@@ -207,3 +207,4 @@ python3 scripts/feishu_notify.py \
 - **Cash runway is critical**: SMR is pre-revenue; monitor cash position and DOE funding milestones. A cash crunch event is an existential risk signal.
 - **NRC design cert is the moat**: NuScale's only commercial SMR with NRC design approval — preserve this narrative signal in analysis.
 - **Deduplication priority**: When in doubt, skip.
+- **跨板块移交**：若事件具跨板块传导性（SMR 板块联动、AI capex/利率冲击），移交 `event-impact-estimation` skill 做传导链分析。

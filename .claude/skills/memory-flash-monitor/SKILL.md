@@ -211,7 +211,7 @@ python3 scripts/feishu_notify.py \
   --entry "event:[影响评级emoji] [事件标题2]" \
   --entry "detail:[核心数据点]" \
   --entry "detail:受益/承压: [具体公司或品种]" \
-  --footer "📁 详情: ~/stock-analysis/events/memory-flash/"
+  --footer "📁 详情: events/memory-flash/"
 ```
 
 - For each event: always include 2 `--entry detail:` lines — one for the key data point, one for key players affected
@@ -229,3 +229,4 @@ python3 scripts/feishu_notify.py \
 - **Scope**: Focus on events with material relevance — earnings releases, price inflection points, capacity expansion/cuts, technology breakthroughs, export control actions, major customer wins/losses, M&A. Avoid minor analyst notes or speculative rumors.
 - **Deduplication priority**: When in doubt, skip. It is better to miss a duplicate than to re-analyze the same event twice.
 - **Price context**: When covering NAND/DRAM pricing events, note the direction (涨价/降价), approximate magnitude if available, and which product segments are affected (eMMC, UFS, DDR4/5, LPDDR5, enterprise SSD, etc.).
+- **跨板块移交**：若事件具跨板块传导性（如存储涨价挤压消费电子整机、龙头定调），移交 `event-impact-estimation` skill 做传导链分析并落到 watchlist。
