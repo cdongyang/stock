@@ -1,6 +1,6 @@
 ---
 name: stock-research
-description: 对单只股票做深度研究并产出结构化研究报告（输出到 research-report/stock/）。**只要用户提及"调研/研究/分析/扒一扒/深度分析"某只股票，或问"XX 股票怎么样 / 值得买吗 / 给我 XX 的报告 / 看看 XX 的基本面"，或直接丢出一个股票代码（AAPL、1810.HK、600519 等）并暗示要研究，都应触发此 skill**。即使用户没有明确说"写报告"，只要意图是"系统性了解一只股票"，就应该用这个 skill 产出深度报告，而不是简单对话式回答。不要与 watchlist 管理任务混淆——此 skill 专注单只标的的深度剖析。
+description: 对单只股票做深度研究并产出结构化研究报告（输出到 research/stock/）。**只要用户提及"调研/研究/分析/扒一扒/深度分析"某只股票，或问"XX 股票怎么样 / 值得买吗 / 给我 XX 的报告 / 看看 XX 的基本面"，或直接丢出一个股票代码（AAPL、1810.HK、600519 等）并暗示要研究，都应触发此 skill**。即使用户没有明确说"写报告"，只要意图是"系统性了解一只股票"，就应该用这个 skill 产出深度报告，而不是简单对话式回答。不要与 watchlist 管理任务混淆——此 skill 专注单只标的的深度剖析。
 ---
 
 # Stock Research Skill
@@ -20,13 +20,13 @@ description: 对单只股票做深度研究并产出结构化研究报告（输�
 **不适用场景**：
 - 关注清单（watchlist）维护
 - 简单报价查询（"XX 现在多少钱"）
-- 行业级分析（属于 research-report/ 根目录而非 stock/）
+- 行业级分析（属于 research/ 根目录及行业子目录，而非 stock/）
 
 ## 核心要求
 
-### 1. 严格遵循 `AGENTS.md` 的四维度分析框架
+### 1. 严格遵循 `stock-analysis-framework` skill 的四维度分析框架
 
-在工作目录根部的 `AGENTS.md` 定义了完整的分析框架（消息面 / 基本面 / 技术面 / 竞争格局）、硬约束、输出模板和风格规范。**动手前先通读 AGENTS.md**，任何与它冲突的写法都要以 AGENTS.md 为准。
+`stock-analysis-framework` skill 定义了完整的分析框架（消息面 / 基本面 / 技术面 / 竞争格局）、硬约束、输出模板和风格规范。**动手前先调用该 skill**，任何与它冲突的写法都要以该 skill 为准。
 
 这里强调几条容易被忽视的硬约束：
 - **区分事实与判断**：营收数字是事实，"这代表基本面向好"是判断，两者分开。
@@ -58,7 +58,7 @@ description: 对单只股票做深度研究并产出结构化研究报告（输�
 
 ### 4. 输出文件
 
-**落盘位置**：`research-report/stock/<ticker-or-name>.md`
+**落盘位置**：`research/stock/<ticker-or-name>.md`
 - 美股：直接用 ticker 小写，如 `nvda.md`、`oklo.md`、`tme.md`
 - 港股：用 `xxxx-hk.md` 或中文公司简称，如 `1810-hk-xiaomi.md`、`tencent-music.md`
 - A 股：代码 + 简称，如 `600519-maotai.md`
@@ -67,7 +67,7 @@ description: 对单只股票做深度研究并产出结构化研究报告（输�
 
 ### 5. 报告结构模板
 
-参考 `research-report/stock/oklo.md` 和 `NuScale-Power.md` 的风格作为"深度报告范式"。不用完全照搬 11 节结构，根据标的特点增删，但必须覆盖这些**核心块**：
+参考 `research/stock/oklo.md` 和 `research/stock/NuScale-Power.md` 的风格作为"深度报告范式"。不用完全照搬 11 节结构，根据标的特点增删，但必须覆盖这些**核心块**：
 
 ```markdown
 # <公司名> 深度剖析：<一句话核心观点，含辨识度>
@@ -158,7 +158,7 @@ description: 对单只股票做深度研究并产出结构化研究报告（输�
 ## 工作流（推荐顺序）
 
 1. **澄清**（必要时）：代码、时间维度、持仓状态
-2. **检查已有**：`ls research-report/stock/ | grep <ticker>`，有则读取决定增量更新 or 重写
+2. **检查已有**：`ls research/stock/ | grep <ticker>`，有则读取决定增量更新 or 重写
 3. **并行搜索**：消息面 + 基本面 + 技术面 + 竞争格局 同时发起 4 个 WebSearch
 4. **交叉验证**：四维度是否一致？不一致时写清楚（例："基本面好但份额被蚕食"、"技术面超买但竞争恶化"）
 5. **写报告**：按模板产出，注意所有硬约束

@@ -216,7 +216,7 @@ python3 scripts/feishu_notify.py \
   --item "   利空：[最重要的1个因素]" \
   --item "────────────────────" \
   --item "🌐 市场背景：[HSI/大盘方向一句话]" \
-  --footer "📁 详情: ~/stock-analysis/forecasts/YYYY-MM-DD_forecast.md"
+  --footer "📁 详情: forecasts/YYYY-MM-DD_forecast.md"
 ```
 
 Skip silently if `scripts/feishu_notify.py` or `.env` is missing.

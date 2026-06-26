@@ -201,7 +201,7 @@ python3 scripts/feishu_notify.py \
   --item "   [如Miss: 反思一句话核心结论]" \
   --item "────────────────────" \
   --item "🌐 HSI当日: [+/-X.X%]" \
-  --footer "📁 详情: ~/stock-analysis/forecasts/YYYY-MM-DD_review.md"
+  --footer "📁 详情: forecasts/YYYY-MM-DD_review.md"
 ```
 
 - For a Hit with no reflection: omit the reflection line

@@ -209,7 +209,7 @@ python3 scripts/feishu_notify.py \
   --entry "event:[影响评级emoji] [事件标题2]" \
   --entry "detail:[核心事实]" \
   --entry "detail:1698.HK 影响: [简述]" \
-  --footer "📁 详情: ~/stock-analysis/events/tencent-music/"
+  --footer "📁 详情: events/tencent-music/"
 ```
 
 - For each event: always include 2 `--entry detail:` lines — one for the core business fact, one for the 1698.HK investor angle

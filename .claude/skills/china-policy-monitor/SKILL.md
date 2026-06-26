@@ -279,7 +279,7 @@ python3 scripts/feishu_notify.py \
   --item "🔴 承压：[行业D]（[1句逻辑]）" \
   --item "────────────────────" \
   --item "💡 市场整体判断：[1句话结论]" \
-  --footer "📁 详情: ~/stock-analysis/events/china-policy/"
+  --footer "📁 详情: events/china-policy/"
 ```
 
 Rules:

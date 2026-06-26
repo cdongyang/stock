@@ -226,7 +226,7 @@ python3 scripts/feishu_notify.py \
   --entry "detail:[核心事实]" \
   --entry "detail:石油/黄金影响: [简述]" \
   --entry "detail:市场视角: [简述]" \
-  --footer "📁 详情: ~/stock-analysis/events/us-israel-iran/"
+  --footer "📁 详情: events/us-israel-iran/"
 ```
 
 - For each event: always include 3 `--entry detail:` lines — military/diplomatic fact, oil/gold impact, and market angle
