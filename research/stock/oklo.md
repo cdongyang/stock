@@ -1,13 +1,13 @@
 # Oklo 深度剖析:AI 核电叙事的高估值赌局与 7·4 临界二元赌注
 
-> **更新日期:2026-06-25**(原始报告 2026-04-17,4-29 深度版,6-25 全面刷新)
+> **更新日期:2026-06-25**(原始报告 2026-04-17,4-29 深度版,6-25 全面刷新;2026-06-26 修正 X-energy 上市状态)
 >
 > **6/25 核心变化(4 月 → 6 月)**:
 > - **股价大幅回落**:4 月 ~$76 → 6-25 收盘 **$55.23**,市值约 **$94 亿**;较 52 周高点 $193.84 累跌约 **71%**,距 52 周低点 $44.88 仅约 23% 空间
 > - 🔥 **近期剧情高度集中在 7 月 4 日**——Atomic Alchemy 的 **Groves VIPR 同位素反应堆(德州 Lockhart,15 MWt 轻水池式堆)是最近的临界候选**,若实现将是公司首个真实运行反应堆,可重写"零营收概念股"叙事;**20% 超高空头仓位在任何正向催化剂下都可能形成剧烈轧空**
 > - **Q1 2026 财报(2026-05-12)**:EPS -$0.19(同比恶化 171%),净亏损 $33.1M,运营亏损 $51.2M,现金+有价证券 **$2.5B**
 > - **6 月事件链**:6-08 ARMEC 精密制造商收购(纵向整合制造端)、6-11 DOE 批准 Aurora-INL **PDSA**(+7.1%)、6-16 Standard Nuclear 燃料回收 MOU + 日本 $623 亿 SMR 板块催化、6-18 Centrus HALEU 燃料供应 LOI(2029 首批交付,覆盖 5 座 Aurora)、6-03 双创始人套现约 $27M(-12%)
-> - **竞争追赶**:Antares、Valar Atomics 已在 DOE Reactor Pilot Program 中**先于 Oklo 实现临界**;X-energy 已提交 S-1(Nasdaq: XE),Holtec 保密申请 IPO($10B+ 目标)
+> - **竞争追赶**:Antares、Valar Atomics 已在 DOE Reactor Pilot Program 中**先于 Oklo 实现临界**;**X-energy 已于 2026-04-24 登陆纳斯达克(Nasdaq: XE),IPO 以 $23/股募资约 $10.2 亿——史上最大先进核能 IPO,当前市值约 $80 亿**,Holtec 保密申请 IPO($10B+ 目标)
 > - **分析师**:平均 12 月目标价 $88–94,区间极宽 **$55–$130**;UBS 6-11 以"资本担忧"下调至 $55,Goldman ~$66,Wedbush 维持 $110
 >
 > 以下为完整报告正文,数据已刷新至 2026-06。深层业务/竞争/团队/财务结构沿用深度框架,行业政策与历史背景章节除数据点微调外保持稳定。
@@ -60,7 +60,7 @@ SMR 赛道竞争格局已显著分化,下表给出核心对比(市值/进度截�
 |---|---|---|---|---|---|---|
 | **Oklo** | 钠冷快堆,金属燃料 | 75 MWe | PDSA 已批;COLA 申请中 | 2028 (INL);7/4 Groves 临界目标 | Meta 1.2 GW, 国防部, Switch | **~$9.4B** |
 | **NuScale (SMR)** | 轻水堆 PWR | 77 MWe | **已获设计认证(唯一)** | 2030 初 | TVA/ENTRA1 6 GW, Romania | ~$5.3B |
-| **X-energy** | HTGR 球床 TRISO | 80 MWe | CPA 审查中 | 2030 (Dow) | Amazon 5 GW($700M 投资), Dow | **S-1 已提交,Nasdaq: XE** |
+| **X-energy** | HTGR 球床 TRISO | 80 MWe | CPA 审查中 | 2030 (Dow) | Amazon 5 GW(C-1 轮 $500M 领投), Dow | **已上市 Nasdaq: XE(2026-04-24),~$8B** |
 | **TerraPower** | 钠冷快堆+熔盐储能 | 345-500 MWe | **2026-03 获建造许可** | 2031 (Kemmerer) | Meta 8 机组, PacifiCorp | 私营(盖茨) |
 | **Kairos Power** | 熔盐冷却 FHR | 140 MWe | **两张 CPA 在手** | 2030 (Hermes 2) | Google 500 MW, TVA | 私营 |
 | **Holtec SMR-300** | 轻水堆 PWR | 300 MWe | CPA Part 1 已受理 | 2030 初 | Palisades+$400M DOE 奖 | **保密 IPO,$10B+ 目标** |
@@ -74,7 +74,7 @@ SMR 赛道竞争格局已显著分化,下表给出核心对比(市值/进度截�
 
 1. **与 Oklo 技术最相似的 TerraPower(比尔·盖茨创立)已于 2026 年 3 月获得 NRC 建造许可,比 Oklo 领先一个完整审批阶段**;**Kairos、TerraPower、Holtec、GE Hitachi 均已握有 CPA,Oklo 是主要先进 SMR 中唯一尚无建造许可的**——其选择的 Part 52 combined license 路径全球无先例,2022 年 1 月首份 COLA 曾被 NRC"无偏见驳回"。
 2. **微堆同行已抢先临界**:Antares 和 Valar Atomics 已在 DOE Reactor Pilot Program 中先于 Oklo 实现临界,**Oklo 在 DOE Program 的时间线竞赛中落后**。但 Aurora-INL 是体量更大(75 MWe)的商业反应堆,而非试验微堆,市场定位不同——Oklo 的差异化壁垒仍在于"钠冷快堆 + 闭合燃料循环 + 制造(ARMEC)/燃料(Centrus LOI)/回收(Standard Nuclear)纵向整合"的商业路径,竞争对手中无直接复制者(信心:中)。
-3. **私有公司 IPO 浪潮(威胁评级:中)**:X-energy(已提交 S-1,Nasdaq: XE)和 Holtec(保密申请,$10B+ 目标)上市将稀释 SMR 板块估值溢价,可能吸引部分从 OKLO 流出的资金。
+3. **私有公司 IPO 浪潮(威胁评级:中)**:**X-energy 已于 2026-04-24 上市(Nasdaq: XE,$23/股募资约 $10.2 亿、认购超 15 倍、首日 +31~36%,史上最大先进核能 IPO;首日 OKLO/NuScale 遭资金分流,详见 `events/oklo/events/2026-04-24_x-energy-xe-nasdaq-ipo-smr-sector.md`)**,Newcleo 2026-05-27 以 $24 亿 SPAC 跟进上市,Holtec(保密申请,$10B+ 目标)/TerraPower 上市预期仍在——板块估值溢价被稀释、并分流部分从 OKLO 流出的资金;但同步也验证了 SMR 可投资性,到 6 月已转为宏观催化剂同步抬升各 SMR 名(信心:中)。
 4. **系统性竞争**:2025 年 10 月,美国商务部与 Westinghouse/Cameco/Brookfield 达成 **800 亿美元战略伙伴关系**,意味着 Westinghouse AP1000/AP300 已获国家级背书,将是 Oklo 长期最大的系统性竞争对手(参见第 4 节 DOE 巨额 AP1000 贷款案例)。
 
 ---
@@ -271,7 +271,7 @@ Oklo 目前仍是 **pre-revenue 公司**——FY2025 营收为 0。**首笔实�
 2. **Aurora-INL DSA 提交进展** —— PDSA 已批,DSA 是 NRC 商运许可的下一关
 3. **Switch 12 GW / Meta 1.2 GW 是否转化为约束性 PPA** —— 管道从"故事"变"收入"的决定性信号
 4. **Atomic Alchemy 首笔同位素商业合同** —— 最早的真实营收来源
-5. **X-energy(XE)/ Holtec IPO 节点与定价** —— SMR 板块估值锚
+5. **Holtec / TerraPower IPO 节点与定价 + XE 上市后股价表现** —— SMR 板块估值锚(X-energy 已于 2026-04-24 上市)
 
 ---
 
