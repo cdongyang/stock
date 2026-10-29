@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import aiosqlite
 
@@ -20,17 +20,6 @@ CREATE TABLE IF NOT EXISTS capital_flow (
     UNIQUE(code, minute, source)
 );
 CREATE INDEX IF NOT EXISTS idx_flow ON capital_flow(code, minute, source);
-
-CREATE TABLE IF NOT EXISTS ticks (
-    id        INTEGER PRIMARY KEY,
-    code      TEXT NOT NULL,
-    time      TEXT NOT NULL,
-    price     REAL NOT NULL,
-    volume    INTEGER NOT NULL,
-    amount    REAL NOT NULL,
-    direction TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_ticks ON ticks(code, time);
 """
 
 
@@ -44,16 +33,6 @@ class FlowData:
     mid_sell: float = 0.0
     small_buy: float = 0.0
     small_sell: float = 0.0
-
-
-@dataclass
-class TickRecord:
-    code: str
-    time: str
-    price: float
-    volume: int
-    amount: float
-    direction: str
 
 
 class DB:
@@ -94,13 +73,6 @@ class DB:
         )
         await self._conn.commit()
 
-    async def insert_tick(self, tick: TickRecord):
-        await self._conn.execute(
-            "INSERT INTO ticks (code, time, price, volume, amount, direction) VALUES (?,?,?,?,?,?)",
-            (tick.code, tick.time, tick.price, tick.volume, tick.amount, tick.direction),
-        )
-        await self._conn.commit()
-
     async def query_flow(self, code: str, source: str, start: str, end: str) -> list[dict]:
         cols = ("minute", "main_buy", "main_sell", "fat_buy", "fat_sell",
                 "mid_buy", "mid_sell", "small_buy", "small_sell")
@@ -118,16 +90,3 @@ class DB:
         ) as cur:
             row = await cur.fetchone()
             return row[0] if row else None
-
-    async def query_ticks(
-        self, code: str, start: str, end: str, direction: str = "all"
-    ) -> list[dict]:
-        cols = ("time", "price", "volume", "amount", "direction")
-        sql = "SELECT time,price,volume,amount,direction FROM ticks WHERE code=? AND time BETWEEN ? AND ?"
-        params: list = [code, start, end]
-        if direction in ("buy", "sell"):
-            sql += " AND direction=?"
-            params.append(direction)
-        sql += " ORDER BY time DESC"
-        async with self._conn.execute(sql, params) as cur:
-            return [dict(zip(cols, row)) async for row in cur]

@@ -9,21 +9,9 @@
     body { font-family: sans-serif; background: #0d1117; color: #c9d1d9; padding: 16px; }
     #controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
     select, input[type=date] { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 10px; border-radius: 6px; }
-    .tab { padding: 6px 14px; border-radius: 6px; border: 1px solid #30363d; background: #161b22; color: #8b949e; cursor: pointer; }
-    .tab.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
     #tier-chart  { width: 100%; height: 300px; }
     #kline-chart { width: 100%; height: 200px; margin-top: 8px; }
     #cum-chart   { width: 100%; height: 160px; margin-top: 8px; }
-    #tick-section { margin-top: 16px; }
-    #tick-filters { display: flex; gap: 6px; margin-bottom: 8px; }
-    .dir-btn { padding: 4px 12px; border-radius: 4px; border: 1px solid #30363d; background: #161b22; color: #8b949e; cursor: pointer; font-size: 13px; }
-    .dir-btn.active { background: #388bfd22; color: #58a6ff; border-color: #388bfd; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #161b22; color: #8b949e; padding: 6px 10px; text-align: left; border-bottom: 1px solid #21262d; }
-    td { padding: 5px 10px; border-bottom: 1px solid #21262d; }
-    tfoot td { padding: 6px 10px; background: #161b22; font-weight: 600; border-top: 1px solid #30363d; }
-    .buy  { color: #3fb950; font-weight: 600; }
-    .sell { color: #f85149; font-weight: 600; }
     #status { margin-top: 8px; font-size: 12px; color: #8b949e; }
   </style>
 </head>
@@ -31,35 +19,11 @@
 <div id="controls">
   <select id="stockSelect"></select>
   <input type="date" id="dateSelect">
-  <div style="display:flex;gap:4px">
-    <button class="tab active" data-src="plan_b">方案B（逐笔）</button>
-    <button class="tab" data-src="plan_a">方案A（轮询）</button>
-  </div>
 </div>
 <div id="tier-chart"></div>
 <div id="kline-chart"></div>
 <div id="cum-chart"></div>
 
-<div id="tick-section">
-  <div id="tick-filters">
-    <button class="dir-btn active" data-dir="all">全部</button>
-    <button class="dir-btn" data-dir="buy">买入</button>
-    <button class="dir-btn" data-dir="sell">卖出</button>
-  </div>
-  <table>
-    <thead><tr><th>时间</th><th>价格</th><th>数量</th><th>金额</th><th>方向</th></tr></thead>
-    <tbody id="tick-body"></tbody>
-    <tfoot>
-      <tr>
-        <td>合计</td>
-        <td></td>
-        <td id="sum-volume">—</td>
-        <td id="sum-amount">—</td>
-        <td id="sum-net">—</td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
 <div id="status">等待数据...</div>
 
 <script>
@@ -108,9 +72,8 @@ function linkDataZoom(...charts) {
 }
 linkDataZoom(tierChart, klineChart, cumChart);
 
-let currentCode = '', currentSource = 'plan_b', currentDir = 'all';
-const MAX_TICKS = 200;
-let _visibleTicks = [];
+let currentCode = '';
+const SOURCE = 'plan_a';
 
 const SERIES = [
   { name: '特大单净买入', field: 'main_net',  color: '#00c853' },
@@ -208,8 +171,6 @@ cumChart.setOption({
 
 function setStatus(msg) { document.getElementById('status').textContent = msg; }
 
-function fmt(n) { return '$'+(n/1000).toFixed(1)+'k'; }
-
 function renderFlow(rows, klines = []) {
   // 以 flow 时间和 K 线时间的并集为统一 x 轴，延伸盘 K 线正常显示
   const flowMap = {};
@@ -261,73 +222,16 @@ function renderFlow(rows, klines = []) {
   });
 }
 
-function updateSummary() {
-  const totalVol = _visibleTicks.reduce((s, t) => s + t.volume, 0);
-  const totalAmt = _visibleTicks.reduce((s, t) => s + t.amount, 0);
-  const netAmt   = _visibleTicks.reduce((s, t) => s + (t.direction === 'buy' ? t.amount : -t.amount), 0);
-  document.getElementById('sum-volume').textContent = totalVol.toLocaleString();
-  document.getElementById('sum-amount').textContent = fmt(totalAmt);
-  const netEl = document.getElementById('sum-net');
-  netEl.textContent = (netAmt >= 0 ? '+' : '') + fmt(netAmt);
-  netEl.className = netAmt >= 0 ? 'buy' : 'sell';
-}
-
-function renderTicks(ticks) {
-  _visibleTicks = ticks.slice(0, MAX_TICKS);
-  const tbody = document.getElementById('tick-body');
-  tbody.innerHTML = '';
-  _visibleTicks.forEach(t => tbody.appendChild(makeRow(t)));
-  updateSummary();
-}
-
-function makeRow(t) {
-  const tr = document.createElement('tr');
-  const dir = t.direction === 'buy' ? '买入' : '卖出';
-  const cls = t.direction === 'buy' ? 'buy' : 'sell';
-  tr.innerHTML = `
-    <td>${t.time.slice(11)}</td>
-    <td>${t.price.toFixed(2)}</td>
-    <td>${t.volume.toLocaleString()}</td>
-    <td>${fmt(t.amount)}</td>
-    <td class="${cls}">${dir}</td>
-  `;
-  return tr;
-}
-
-function prependTick(t) {
-  if (t.code !== currentCode || currentSource !== 'plan_b') return;
-  if (currentDir !== 'all' && t.direction !== currentDir) return;
-  _visibleTicks.unshift(t);
-  if (_visibleTicks.length > MAX_TICKS) _visibleTicks.pop();
-  const tbody = document.getElementById('tick-body');
-  tbody.insertBefore(makeRow(t), tbody.firstChild);
-  while (tbody.children.length > MAX_TICKS) tbody.removeChild(tbody.lastChild);
-  updateSummary();
-}
-
 async function loadFlow() {
   const date = document.getElementById('dateSelect').value || null;
   const dp = date ? `&date=${date}` : '';
   const kp = date ? `?date=${date}` : '';
   const [rows, klines] = await Promise.all([
-    fetch(`/api/flow/${currentCode}?source=${currentSource}${dp}`).then(r => r.json()).catch(() => []),
+    fetch(`/api/flow/${currentCode}?source=${SOURCE}${dp}`).then(r => r.json()).catch(() => []),
     fetch(`/api/kline/${currentCode}${kp}`).then(r => r.json()).catch(() => []),
   ]);
   renderFlow(rows, klines);
-  setStatus(`已加载 ${currentCode} (${currentSource === 'plan_a' ? '方案A' : '方案B'})`);
-}
-
-async function loadTicks() {
-  if (currentSource !== 'plan_b') return;
-  const date = document.getElementById('dateSelect').value || null;
-  const dp = date ? `&date=${date}` : '';
-  const ticks = await fetch(`/api/ticks/${currentCode}?direction=${currentDir}${dp}`)
-    .then(r => r.json()).catch(() => []);
-  renderTicks(ticks);
-}
-
-function setTickSectionVisible(visible) {
-  document.getElementById('tick-section').style.display = visible ? '' : 'none';
+  setStatus(`已加载 ${currentCode}`);
 }
 
 function connectWS() {
@@ -335,10 +239,8 @@ function connectWS() {
   ws.onopen = () => setStatus('WebSocket 已连接');
   ws.onmessage = e => {
     const msg = JSON.parse(e.data);
-    if (msg.type === 'flow_update' && msg.code === currentCode && currentSource === 'plan_b') {
+    if (msg.type === 'flow_update' && msg.code === currentCode) {
       loadFlow();
-    } else if (msg.type === 'tick') {
-      prependTick(msg.data);
     }
   };
   ws.onclose = () => { setStatus('WebSocket 断开，3s 后重连...'); setTimeout(connectWS, 3000); };
@@ -358,40 +260,22 @@ async function loadStocks() {
 
 document.getElementById('stockSelect').addEventListener('change', e => {
   currentCode = e.target.value;
-  loadFlow(); loadTicks();
+  loadFlow();
 });
 document.getElementById('dateSelect').addEventListener('change', () => {
-  loadFlow(); loadTicks();
+  loadFlow();
 });
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentSource = btn.dataset.src;
-    setTickSectionVisible(currentSource === 'plan_b');
-    loadFlow(); loadTicks();
-  });
-});
-document.querySelectorAll('.dir-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentDir = btn.dataset.dir;
-    loadTicks();
-  });
-});
-
-setInterval(() => { if (currentSource === 'plan_a') loadFlow(); }, 30000);
+setInterval(loadFlow, 30000);
 
 async function initDate() {
   const dateInput = document.getElementById('dateSelect');
   if (dateInput.value) return;
-  const res = await fetch(`/api/latest_date/${currentCode}?source=${currentSource}`)
+  const res = await fetch(`/api/latest_date/${currentCode}?source=${SOURCE}`)
     .then(r => r.json()).catch(() => ({}));
   if (res.date) dateInput.value = res.date;
 }
 
-loadStocks().then(async () => { await initDate(); loadFlow(); loadTicks(); connectWS(); });
+loadStocks().then(async () => { await initDate(); loadFlow(); connectWS(); });
 </script>
 </body>
 </html>

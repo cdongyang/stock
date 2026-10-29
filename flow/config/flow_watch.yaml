@@ -3,10 +3,22 @@ stocks:
     name: Oklo
   - code: US.SMR
     name: NuScale
+  - code: US.CBRS
+    name: Cerebras
+  - code: US.SNDK
+    name: Sandisk
+  - code: US.SKHY
+    name: Skyhigh
+  - code: US.MU
+    name: Micron
+  - code: US.INTC
+    name: Intel
+  - code: US.SPCX
+    name: SpaceX
 
 server:
   host: 127.0.0.1
-  port: 8080
+  port: 8088
 
 futu:
   host: 127.0.0.1
