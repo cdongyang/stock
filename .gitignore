@@ -1,7 +1,11 @@
 .env
+scripts/env.sh
 
 __pycache__
 
 logs/
 
 events/
+
+.DS_Store
+scripts/.claude_oauth_token
