@@ -25,7 +25,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import requests
+import urllib.request
+import urllib.error
 
 log = logging.getLogger(__name__)
 
@@ -61,14 +62,26 @@ def _get_config() -> dict[str, str]:
 
 # ── 飞书 API ──────────────────────────────────────────────
 
+def _http_post(url: str, payload: dict, headers: dict | None = None) -> dict:
+    import ssl
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(url, data=body, method="POST")
+    req.add_header("Content-Type", "application/json; charset=utf-8")
+    if headers:
+        for k, v in headers.items():
+            req.add_header(k, v)
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
 def _get_tenant_access_token(app_id: str, app_secret: str) -> str:
-    resp = requests.post(
+    data = _http_post(
         "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
-        json={"app_id": app_id, "app_secret": app_secret},
-        timeout=10,
+        {"app_id": app_id, "app_secret": app_secret},
     )
-    resp.raise_for_status()
-    data = resp.json()
     if data.get("code") != 0:
         raise RuntimeError(f"获取 tenant_access_token 失败: {data}")
     return data["tenant_access_token"]
@@ -163,17 +176,12 @@ def send_notification(
             "msg_type": "post",
             "content": json.dumps(content, ensure_ascii=False),
         }
-        resp = requests.post(
+        data = _http_post(
             f"https://open.feishu.cn/open-apis/im/v1/messages"
             f"?receive_id_type={cfg['receive_id_type']}",
-            json=payload,
+            payload,
             headers={"Authorization": f"Bearer {token}"},
-            timeout=10,
         )
-        if not resp.ok:
-            log.error(f"飞书 API 错误 {resp.status_code}: {resp.text}")
-            return False
-        data = resp.json()
         if data.get("code") == 0:
             log.info("飞书通知发送成功")
             return True
