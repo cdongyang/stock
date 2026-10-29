@@ -48,6 +48,7 @@ stock/
 | `tencent-music-monitor` | 腾讯音乐（TME / 1698.HK） |
 | `memory-flash-monitor` | 内存/闪存行业（Samsung/Hynix/Micron/YMTC 等） |
 | `nuscale-monitor` | NuScale Power（SMR 小型模块核电） |
+| `sndk-monitor` | Sandisk（NASDAQ: SNDK）NAND 闪存 |
 | `china-policy-monitor` | 中国政策动向 |
 | `us-israel-iran-monitor` | 美以伊冲突与中东地缘政治 |
 
